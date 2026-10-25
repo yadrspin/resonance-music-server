@@ -1,0 +1,27 @@
+services:
+  resonance:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resonance-music-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MUSIC_DIR=/music
+      - DATA_DIR=/data
+    volumes:
+      # WINDOWS USERS: Replace C:/Users/YourUsername/Music with your Windows music folder!
+      # Examples:
+      #   - C:/Users/John/Music:/music:ro
+      #   - D:/Audio/Music:/music:ro
+      #   - //NAS/MusicShare:/music:ro
+      - C:/Users/%USERNAME%/Music:/music:ro
+      - ./resonance_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

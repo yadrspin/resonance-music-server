@@ -1,0 +1,6 @@
+{
+  "name": "Resonance - Folder-First Music Server",
+  "description": "Lightweight self-hosted audio streaming server and web player with strict native directory hierarchy, HTTP 206 range audio seeking, and playlist management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
