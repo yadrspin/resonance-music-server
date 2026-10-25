@@ -14,13 +14,13 @@ const currentDir = path.dirname(__filename);
 // Automatically detect application root folder even when started as a Windows Service from C:\Windows\system32
 export const APP_ROOT: string = (() => {
   if (fs.existsSync(path.join(currentDir, 'config.json')) || fs.existsSync(path.join(currentDir, 'package.json'))) {
-    return currentDir;
+    return path.resolve(currentDir);
   }
   const parent = path.resolve(currentDir, '..');
   if (fs.existsSync(path.join(parent, 'config.json')) || fs.existsSync(path.join(parent, 'package.json'))) {
-    return parent;
+    return path.resolve(parent);
   }
-  return process.cwd();
+  return path.resolve(process.cwd());
 })();
 
 // Force working directory to the application folder
@@ -72,21 +72,23 @@ export const PORT: number = (() => {
   return 3000;
 })();
 
-// Configurable Music Root Directory
+// Configurable Music Root Directory (Always Absolute Path)
 export let MUSIC_DIR: string = (() => {
-  // 1. Environment variable
+  let raw = '';
   if (process.env.MUSIC_DIR && process.env.MUSIC_DIR.trim() !== '') {
-    try {
-      return path.resolve(process.env.MUSIC_DIR.trim());
-    } catch {}
+    raw = process.env.MUSIC_DIR.trim();
+  } else if (fileConfig.musicDir && typeof fileConfig.musicDir === 'string' && fileConfig.musicDir.trim() !== '') {
+    raw = fileConfig.musicDir.trim();
   }
-  // 2. config.json
-  if (fileConfig.musicDir && typeof fileConfig.musicDir === 'string' && fileConfig.musicDir.trim() !== '') {
-    try {
-      return path.resolve(fileConfig.musicDir.trim());
-    } catch {}
+
+  if (raw) {
+    if (path.isAbsolute(raw)) {
+      return path.resolve(raw);
+    }
+    return path.resolve(APP_ROOT, raw);
   }
-  // 3. Windows standard user profile
+
+  // Windows standard user profile
   const userProfile = process.env.USERPROFILE;
   if (userProfile) {
     const winMusic = path.join(userProfile, 'Music');
@@ -94,20 +96,27 @@ export let MUSIC_DIR: string = (() => {
       return winMusic;
     }
   }
-  // 4. Fallback to default internal directory
+
   return DEFAULT_MUSIC_DIR;
 })();
 
-// Persistent Data Storage Directory (Playlists, Cache)
+// Persistent Data Storage Directory (Playlists, Cache) - Always Absolute Path
 export const DATA_DIR: string = (() => {
+  let raw = '';
   if (process.env.DATA_DIR && process.env.DATA_DIR.trim() !== '') {
-    return path.resolve(process.env.DATA_DIR.trim());
+    raw = process.env.DATA_DIR.trim();
+  } else if (fileConfig.dataDir && typeof fileConfig.dataDir === 'string' && fileConfig.dataDir.trim() !== '') {
+    raw = fileConfig.dataDir.trim();
   }
-  if (fileConfig.dataDir && typeof fileConfig.dataDir === 'string' && fileConfig.dataDir.trim() !== '') {
-    return path.resolve(fileConfig.dataDir.trim());
+
+  if (raw) {
+    if (path.isAbsolute(raw)) {
+      return path.resolve(raw);
+    }
+    return path.resolve(APP_ROOT, raw);
   }
-  // Local project data directory (reliable across services and users)
-  return path.join(APP_ROOT, 'music_data', 'data');
+
+  return path.resolve(APP_ROOT, 'music_data', 'data');
 })();
 
 export const SUPPORTED_AUDIO_EXTENSIONS = new Set([

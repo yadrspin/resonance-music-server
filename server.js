@@ -13,13 +13,13 @@ var __filename = fileURLToPath(import.meta.url);
 var currentDir = path.dirname(__filename);
 var APP_ROOT = (() => {
   if (fs.existsSync(path.join(currentDir, "config.json")) || fs.existsSync(path.join(currentDir, "package.json"))) {
-    return currentDir;
+    return path.resolve(currentDir);
   }
   const parent = path.resolve(currentDir, "..");
   if (fs.existsSync(path.join(parent, "config.json")) || fs.existsSync(path.join(parent, "package.json"))) {
-    return parent;
+    return path.resolve(parent);
   }
-  return process.cwd();
+  return path.resolve(process.cwd());
 })();
 try {
   if (process.cwd() !== APP_ROOT) {
@@ -59,17 +59,17 @@ var PORT = (() => {
   return 3e3;
 })();
 var MUSIC_DIR = (() => {
+  let raw = "";
   if (process.env.MUSIC_DIR && process.env.MUSIC_DIR.trim() !== "") {
-    try {
-      return path.resolve(process.env.MUSIC_DIR.trim());
-    } catch {
-    }
+    raw = process.env.MUSIC_DIR.trim();
+  } else if (fileConfig.musicDir && typeof fileConfig.musicDir === "string" && fileConfig.musicDir.trim() !== "") {
+    raw = fileConfig.musicDir.trim();
   }
-  if (fileConfig.musicDir && typeof fileConfig.musicDir === "string" && fileConfig.musicDir.trim() !== "") {
-    try {
-      return path.resolve(fileConfig.musicDir.trim());
-    } catch {
+  if (raw) {
+    if (path.isAbsolute(raw)) {
+      return path.resolve(raw);
     }
+    return path.resolve(APP_ROOT, raw);
   }
   const userProfile = process.env.USERPROFILE;
   if (userProfile) {
@@ -81,13 +81,19 @@ var MUSIC_DIR = (() => {
   return DEFAULT_MUSIC_DIR;
 })();
 var DATA_DIR = (() => {
+  let raw = "";
   if (process.env.DATA_DIR && process.env.DATA_DIR.trim() !== "") {
-    return path.resolve(process.env.DATA_DIR.trim());
+    raw = process.env.DATA_DIR.trim();
+  } else if (fileConfig.dataDir && typeof fileConfig.dataDir === "string" && fileConfig.dataDir.trim() !== "") {
+    raw = fileConfig.dataDir.trim();
   }
-  if (fileConfig.dataDir && typeof fileConfig.dataDir === "string" && fileConfig.dataDir.trim() !== "") {
-    return path.resolve(fileConfig.dataDir.trim());
+  if (raw) {
+    if (path.isAbsolute(raw)) {
+      return path.resolve(raw);
+    }
+    return path.resolve(APP_ROOT, raw);
   }
-  return path.join(APP_ROOT, "music_data", "data");
+  return path.resolve(APP_ROOT, "music_data", "data");
 })();
 var SUPPORTED_AUDIO_EXTENSIONS = /* @__PURE__ */ new Set([
   ".mp3",

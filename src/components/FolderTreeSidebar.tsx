@@ -140,7 +140,7 @@ export const FolderTreeSidebar: React.FC<FolderTreeSidebarProps> = ({
             {!isTopFoldersCollapsed && (
               <div className="space-y-1">
                 {topFolders.map((folder) => {
-                  const isActive = selectedPlaylistId === null && currentPath.startsWith(folder);
+                  const isActive = selectedPlaylistId === null && (currentPath === folder || currentPath.startsWith(folder + '/') || currentPath.startsWith(folder + '\\'));
                   return (
                     <button
                       key={folder}
@@ -257,12 +257,12 @@ export const FolderTreeSidebar: React.FC<FolderTreeSidebarProps> = ({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-[10px] text-zinc-400 font-medium">
             <span className="flex items-center gap-1">
-              <Folder className="w-3 h-3 text-emerald-400" />
+              <Folder className="w-3 h-3 text-emerald-400 shrink-0" />
               Music Root
             </span>
           </div>
           <div
-            className="bg-zinc-900/70 rounded-md px-2.5 py-1.5 font-mono text-[10px] text-zinc-300 truncate border border-zinc-800/80 hover:border-zinc-700 transition-colors"
+            className="bg-zinc-900/80 rounded-md p-2 font-mono text-[10px] text-zinc-300 break-all select-all border border-zinc-800/80 hover:border-zinc-700 transition-colors leading-relaxed"
             title={systemStats?.musicDir || 'Music Directory'}
           >
             {systemStats?.musicDir || 'music_data/library'}
@@ -273,12 +273,12 @@ export const FolderTreeSidebar: React.FC<FolderTreeSidebarProps> = ({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-[10px] text-zinc-400 font-medium">
             <span className="flex items-center gap-1">
-              <ListMusic className="w-3 h-3 text-indigo-400" />
+              <ListMusic className="w-3 h-3 text-indigo-400 shrink-0" />
               Playlists Storage
             </span>
           </div>
           <div
-            className="bg-zinc-900/70 rounded-md px-2.5 py-1.5 font-mono text-[10px] text-zinc-300 truncate border border-zinc-800/80 hover:border-zinc-700 transition-colors"
+            className="bg-zinc-900/80 rounded-md p-2 font-mono text-[10px] text-zinc-300 break-all select-all border border-zinc-800/80 hover:border-zinc-700 transition-colors leading-relaxed"
             title={systemStats?.dataDir || 'Playlists Directory'}
           >
             {systemStats?.dataDir || 'music_data/data'}

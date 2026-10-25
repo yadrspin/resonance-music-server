@@ -21,6 +21,7 @@ export default function App() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
+  const [rootFolders, setRootFolders] = useState<string[]>([]);
   const [isRescanning, setIsRescanning] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
@@ -115,10 +116,25 @@ export default function App() {
     }
   }, []);
 
+  // Load root folders for persistent sidebar navigation
+  const fetchRootFolders = useCallback(async () => {
+    try {
+      const res = await fetch('/api/browse?path=');
+      if (res.ok) {
+        const data: DirectoryListing = await res.json();
+        const folderNames = data.folders.map((f) => f.name);
+        setRootFolders(folderNames);
+      }
+    } catch (err) {
+      console.error('Error fetching root folders:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPlaylists();
     fetchStats();
-  }, [fetchPlaylists, fetchStats]);
+    fetchRootFolders();
+  }, [fetchPlaylists, fetchStats, fetchRootFolders]);
 
   useEffect(() => {
     fetchDirectory(currentPath);
@@ -164,8 +180,11 @@ export default function App() {
     try {
       const res = await fetch('/api/system/rescan', { method: 'POST' });
       if (res.ok) {
-        await fetchDirectory(currentPath);
-        await fetchStats();
+        await Promise.all([
+          fetchDirectory(currentPath),
+          fetchStats(),
+          fetchRootFolders()
+        ]);
       }
     } catch (err) {
       console.error('Error during library rescan:', err);
@@ -332,7 +351,9 @@ export default function App() {
     ? playlists.find((p) => p.id === selectedPlaylistId) || null
     : null;
 
-  const topFolders = directoryListing?.folders.map((f) => f.path) || [];
+  const topFolders = rootFolders.length > 0
+    ? rootFolders
+    : (directoryListing?.folders.map((f) => f.name) || []);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
