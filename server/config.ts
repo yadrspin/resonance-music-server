@@ -1,26 +1,114 @@
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-// Default library path
-export const DEFAULT_MUSIC_DIR = path.resolve(process.cwd(), 'music_data/library');
+export interface AppConfig {
+  musicDir: string;
+  port: number;
+  dataDir: string;
+}
+
+const __filename = fileURLToPath(import.meta.url);
+const currentDir = path.dirname(__filename);
+
+// Automatically detect application root folder even when started as a Windows Service from C:\Windows\system32
+export const APP_ROOT: string = (() => {
+  if (fs.existsSync(path.join(currentDir, 'config.json')) || fs.existsSync(path.join(currentDir, 'package.json'))) {
+    return currentDir;
+  }
+  const parent = path.resolve(currentDir, '..');
+  if (fs.existsSync(path.join(parent, 'config.json')) || fs.existsSync(path.join(parent, 'package.json'))) {
+    return parent;
+  }
+  return process.cwd();
+})();
+
+// Force working directory to the application folder
+try {
+  if (process.cwd() !== APP_ROOT) {
+    process.chdir(APP_ROOT);
+    console.log(`[Config] Changed working directory to APP_ROOT: ${APP_ROOT}`);
+  }
+} catch (e: any) {
+  console.warn(`[Config] Warning: Could not chdir to ${APP_ROOT}: ${e.message}`);
+}
+
+// Path to configuration file
+export const CONFIG_FILE_PATH = path.join(APP_ROOT, 'config.json');
+
+// Default internal library path
+export const DEFAULT_MUSIC_DIR = path.join(APP_ROOT, 'music_data', 'library');
+
+// Read config.json with support for comments
+export function loadConfigFile(): Partial<AppConfig> {
+  if (fs.existsSync(CONFIG_FILE_PATH)) {
+    try {
+      const rawContent = fs.readFileSync(CONFIG_FILE_PATH, 'utf-8');
+      // Strip comments (// or /* */) to prevent JSON parse errors
+      const stripped = rawContent.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').trim();
+      const parsed = JSON.parse(stripped);
+      console.log(`[Config] 📄 Loaded settings from: ${CONFIG_FILE_PATH}`);
+      return parsed;
+    } catch (err: any) {
+      console.warn(`[Config] ⚠️ Error parsing config.json (${err.message}), using defaults.`);
+    }
+  } else {
+    console.log(`[Config] Note: config.json not found at ${CONFIG_FILE_PATH}, using defaults.`);
+  }
+  return {};
+}
+
+const fileConfig = loadConfigFile();
+
+// Configurable Port
+export const PORT: number = (() => {
+  if (process.env.PORT) {
+    const parsed = parseInt(process.env.PORT, 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  if (fileConfig.port && typeof fileConfig.port === 'number' && fileConfig.port > 0) {
+    return fileConfig.port;
+  }
+  return 3000;
+})();
 
 // Configurable Music Root Directory
 export let MUSIC_DIR: string = (() => {
-  if (process.env.MUSIC_DIR) {
+  // 1. Environment variable
+  if (process.env.MUSIC_DIR && process.env.MUSIC_DIR.trim() !== '') {
     try {
-      const resolved = path.resolve(process.env.MUSIC_DIR);
-      return resolved;
-    } catch {
-      return DEFAULT_MUSIC_DIR;
+      return path.resolve(process.env.MUSIC_DIR.trim());
+    } catch {}
+  }
+  // 2. config.json
+  if (fileConfig.musicDir && typeof fileConfig.musicDir === 'string' && fileConfig.musicDir.trim() !== '') {
+    try {
+      return path.resolve(fileConfig.musicDir.trim());
+    } catch {}
+  }
+  // 3. Windows standard user profile
+  const userProfile = process.env.USERPROFILE;
+  if (userProfile) {
+    const winMusic = path.join(userProfile, 'Music');
+    if (fs.existsSync(winMusic)) {
+      return winMusic;
     }
   }
+  // 4. Fallback to default internal directory
   return DEFAULT_MUSIC_DIR;
 })();
 
 // Persistent Data Storage Directory (Playlists, Cache)
-export const DATA_DIR = process.env.DATA_DIR 
-  ? path.resolve(process.env.DATA_DIR) 
-  : path.resolve(process.cwd(), 'music_data/data');
+export const DATA_DIR: string = (() => {
+  if (process.env.DATA_DIR && process.env.DATA_DIR.trim() !== '') {
+    return path.resolve(process.env.DATA_DIR.trim());
+  }
+  if (fileConfig.dataDir && typeof fileConfig.dataDir === 'string' && fileConfig.dataDir.trim() !== '') {
+    return path.resolve(fileConfig.dataDir.trim());
+  }
+  // Local project data directory (reliable across services and users)
+  return path.join(APP_ROOT, 'music_data', 'data');
+})();
 
 export const SUPPORTED_AUDIO_EXTENSIONS = new Set([
   '.mp3',

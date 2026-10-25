@@ -2,25 +2,93 @@
 import express from "express";
 import path8 from "path";
 import fs7 from "fs";
-import { fileURLToPath } from "url";
+import { fileURLToPath as fileURLToPath2 } from "url";
 import { createServer as createViteServer } from "vite";
 
 // server/config.ts
 import path from "path";
 import fs from "fs";
-var DEFAULT_MUSIC_DIR = path.resolve(process.cwd(), "music_data/library");
-var MUSIC_DIR = (() => {
-  if (process.env.MUSIC_DIR) {
+import { fileURLToPath } from "url";
+var __filename = fileURLToPath(import.meta.url);
+var currentDir = path.dirname(__filename);
+var APP_ROOT = (() => {
+  if (fs.existsSync(path.join(currentDir, "config.json")) || fs.existsSync(path.join(currentDir, "package.json"))) {
+    return currentDir;
+  }
+  const parent = path.resolve(currentDir, "..");
+  if (fs.existsSync(path.join(parent, "config.json")) || fs.existsSync(path.join(parent, "package.json"))) {
+    return parent;
+  }
+  return process.cwd();
+})();
+try {
+  if (process.cwd() !== APP_ROOT) {
+    process.chdir(APP_ROOT);
+    console.log(`[Config] Changed working directory to APP_ROOT: ${APP_ROOT}`);
+  }
+} catch (e) {
+  console.warn(`[Config] Warning: Could not chdir to ${APP_ROOT}: ${e.message}`);
+}
+var CONFIG_FILE_PATH = path.join(APP_ROOT, "config.json");
+var DEFAULT_MUSIC_DIR = path.join(APP_ROOT, "music_data", "library");
+function loadConfigFile() {
+  if (fs.existsSync(CONFIG_FILE_PATH)) {
     try {
-      const resolved = path.resolve(process.env.MUSIC_DIR);
-      return resolved;
+      const rawContent = fs.readFileSync(CONFIG_FILE_PATH, "utf-8");
+      const stripped = rawContent.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1").trim();
+      const parsed = JSON.parse(stripped);
+      console.log(`[Config] \u{1F4C4} Loaded settings from: ${CONFIG_FILE_PATH}`);
+      return parsed;
+    } catch (err) {
+      console.warn(`[Config] \u26A0\uFE0F Error parsing config.json (${err.message}), using defaults.`);
+    }
+  } else {
+    console.log(`[Config] Note: config.json not found at ${CONFIG_FILE_PATH}, using defaults.`);
+  }
+  return {};
+}
+var fileConfig = loadConfigFile();
+var PORT = (() => {
+  if (process.env.PORT) {
+    const parsed = parseInt(process.env.PORT, 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  if (fileConfig.port && typeof fileConfig.port === "number" && fileConfig.port > 0) {
+    return fileConfig.port;
+  }
+  return 3e3;
+})();
+var MUSIC_DIR = (() => {
+  if (process.env.MUSIC_DIR && process.env.MUSIC_DIR.trim() !== "") {
+    try {
+      return path.resolve(process.env.MUSIC_DIR.trim());
     } catch {
-      return DEFAULT_MUSIC_DIR;
+    }
+  }
+  if (fileConfig.musicDir && typeof fileConfig.musicDir === "string" && fileConfig.musicDir.trim() !== "") {
+    try {
+      return path.resolve(fileConfig.musicDir.trim());
+    } catch {
+    }
+  }
+  const userProfile = process.env.USERPROFILE;
+  if (userProfile) {
+    const winMusic = path.join(userProfile, "Music");
+    if (fs.existsSync(winMusic)) {
+      return winMusic;
     }
   }
   return DEFAULT_MUSIC_DIR;
 })();
-var DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.resolve(process.cwd(), "music_data/data");
+var DATA_DIR = (() => {
+  if (process.env.DATA_DIR && process.env.DATA_DIR.trim() !== "") {
+    return path.resolve(process.env.DATA_DIR.trim());
+  }
+  if (fileConfig.dataDir && typeof fileConfig.dataDir === "string" && fileConfig.dataDir.trim() !== "") {
+    return path.resolve(fileConfig.dataDir.trim());
+  }
+  return path.join(APP_ROOT, "music_data", "data");
+})();
 var SUPPORTED_AUDIO_EXTENSIONS = /* @__PURE__ */ new Set([
   ".mp3",
   ".flac",
@@ -1173,11 +1241,10 @@ apiRouter.post("/folders/create", (req, res) => {
 });
 
 // server.ts
-var __filename = fileURLToPath(import.meta.url);
-var __dirname = path8.dirname(__filename);
+var __filename2 = fileURLToPath2(import.meta.url);
+var __dirname = path8.dirname(__filename2);
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3e3;
   initDirectories();
   seedSampleLibraryIfNeeded();
   await playlistStore.seedDefaultPlaylistIfNeeded();
@@ -1192,7 +1259,7 @@ async function startServer() {
       timestamp: (/* @__PURE__ */ new Date()).toISOString()
     });
   });
-  const distPath = path8.resolve(__dirname, "dist");
+  const distPath = path8.resolve(APP_ROOT, "dist");
   const hasDist = fs7.existsSync(distPath);
   if (hasDist) {
     app.use(express.static(distPath));

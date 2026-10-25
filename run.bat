@@ -20,14 +20,13 @@ if %errorlevel% neq 0 goto :NoNode
 where npm >nul 2>nul
 if %errorlevel% neq 0 goto :NoNpm
 
-:: Set default directories
-if "%MUSIC_DIR%"=="" set "MUSIC_DIR=%USERPROFILE%\Music"
-if "%DATA_DIR%"=="" set "DATA_DIR=%APPDATA%\ResonanceServer"
-if "%PORT%"=="" set "PORT=3000"
+:: Ensure config.json exists
+if not exist "config.json" (
+    copy config.example.json config.json >nul 2>&1
+)
 
 echo [OK] Node.js is ready.
-echo [CONFIG] Music Folder: %MUSIC_DIR%
-echo [CONFIG] Server Port:  %PORT%
+echo [CONFIG] Настройки и папки загружаются из файла config.json
 echo.
 
 :: Check node_modules

@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
-import { initDirectories, MUSIC_DIR, DATA_DIR } from './server/config.js';
+import { initDirectories, MUSIC_DIR, DATA_DIR, PORT, APP_ROOT } from './server/config.js';
 import { seedSampleLibraryIfNeeded } from './server/audioGen.js';
 import { playlistStore } from './server/playlists.js';
 import { apiRouter } from './server/api.js';
@@ -13,7 +13,6 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   // Ensure directories exist safely
   initDirectories();
@@ -41,7 +40,7 @@ async function startServer() {
     });
   });
 
-  const distPath = path.resolve(__dirname, 'dist');
+  const distPath = path.resolve(APP_ROOT, 'dist');
   const hasDist = fs.existsSync(distPath);
 
   if (hasDist) {

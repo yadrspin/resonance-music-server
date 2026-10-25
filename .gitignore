@@ -7,6 +7,10 @@ coverage/
 .env*
 !.env.example
 
+# User local configuration
+config.json
+!config.example.json
+
 # Music data & cache
 music_data/
 resonance_data/

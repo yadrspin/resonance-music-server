@@ -8,46 +8,61 @@ echo   Resonance - Установка сервера как службы Windows
 echo ========================================================
 echo.
 
+:: Переход в папку скрипта
+cd /d "%~dp0"
+
 :: Проверка прав администратора
 net session >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [INFO] Запрос прав Администратора...
-    powershell -Command "Start-Process cmd -ArgumentList '/c \"\"%~dpnx0\"\"' -Verb RunAs"
-    exit /b
-)
-
-:: Переход в рабочую папку скрипта
-cd /d "%~dp0"
+if %errorlevel% neq 0 goto :NeedAdmin
 
 :: Проверка путей Node.js
 if exist "C:\Program Files\nodejs\node.exe" set "PATH=C:\Program Files\nodejs;%PATH%"
 if exist "C:\Program Files (x86)\nodejs\node.exe" set "PATH=C:\Program Files (x86)\nodejs;%PATH%"
 
 where node >nul 2>nul
-if %errorlevel% neq 0 (
-    echo [ОШИБКА] Node.js не найден! Установите Node.js с https://nodejs.org/
-    pause
-    exit /b 1
-)
+if %errorlevel% neq 0 goto :NoNode
 
-:: Установка зависимостей если нужно
-if not exist "node_modules\" (
-    echo [1/3] Установка пакетов (npm install)...
-    call npm install --legacy-peer-deps
-)
+:: Проверка зависимостей
+if exist "node_modules\" goto :DoBuild
+echo [1/3] Установка пакетов (npm install)...
+call npm install --legacy-peer-deps
+if %errorlevel% neq 0 goto :NpmError
 
-:: Сборка проекта
+:DoBuild
 echo [2/3] Сборка веб-интерфейса и сервера...
 call npm run build
-if %errorlevel% neq 0 (
-    echo [ОШИБКА] Сборка не удалась.
-    pause
-    exit /b 1
-)
+if %errorlevel% neq 0 goto :BuildError
 
-:: Установка службы
+:DoInstall
 echo [3/3] Регистрация и запуск службы Windows...
-node service-install.js
+call node service-install.js
+goto :Done
 
+:NeedAdmin
+echo [ОШИБКА] Требуются права Администратора!
+echo.
+echo Нажмите правой кнопкой мыши по файлу install-service.bat
+echo и выберите "Запуск от имени администратора".
+echo.
+pause
+exit /b 1
+
+:NoNode
+echo [ОШИБКА] Node.js не найден в системе!
+echo Установите Node.js с официального сайта: https://nodejs.org/
+pause
+exit /b 1
+
+:NpmError
+echo [ОШИБКА] Не удалось установить пакеты npm.
+pause
+exit /b 1
+
+:BuildError
+echo [ОШИБКА] Сборка проекта не удалась.
+pause
+exit /b 1
+
+:Done
 echo.
 pause
