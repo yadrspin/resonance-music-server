@@ -710,6 +710,7 @@ async function getSystemStats() {
   countRecursive(MUSIC_DIR);
   return {
     musicDir: MUSIC_DIR,
+    dataDir: DATA_DIR,
     totalFiles,
     totalFolders,
     totalSizeBytes,

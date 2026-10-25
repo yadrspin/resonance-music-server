@@ -45,6 +45,7 @@ export interface Playlist {
 
 export interface SystemStats {
   musicDir: string;
+  dataDir: string;
   totalFiles: number;
   totalFolders: number;
   totalSizeBytes: number;

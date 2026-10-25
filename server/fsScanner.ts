@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as mm from 'music-metadata';
-import { MUSIC_DIR, SUPPORTED_AUDIO_EXTENSIONS } from './config.js';
+import { MUSIC_DIR, DATA_DIR, SUPPORTED_AUDIO_EXTENSIONS } from './config.js';
 import { sanitizeRelativePath, isPathInsideRoot } from '../src/utils/pathSafety.js';
 import { Track, FolderItem, DirectoryListing } from '../src/types/music.js';
 
@@ -350,6 +350,7 @@ export async function getSystemStats() {
 
   return {
     musicDir: MUSIC_DIR,
+    dataDir: DATA_DIR,
     totalFiles,
     totalFolders,
     totalSizeBytes,
