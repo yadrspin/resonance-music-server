@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
+    "build": "vite build && npm run build:server",
+    "build:server": "esbuild server.ts --bundle --platform=node --format=esm --packages=external --outfile=server.js",
     "preview": "vite preview",
     "start": "tsx server.ts",
+    "service:install": "node service-install.js",
+    "service:uninstall": "node service-uninstall.js",
     "clean": "node -e \"const fs=require('fs'); fs.rmSync('dist', {recursive:true,force:true});\"",
     "lint": "tsc --noEmit"
   },
@@ -20,6 +23,7 @@
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "music-metadata": "^12.3.2",
+    "node-windows": "^1.0.0-beta.8",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "vite": "^8.3.0"

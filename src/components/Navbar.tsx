@@ -2,20 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   FolderTree,
   Search,
-  Server,
   RefreshCw,
-  FolderPlus,
   Play,
   Music2,
-  HardDrive,
-  Download
+  HardDrive
 } from 'lucide-react';
 import { Track } from '../types/music.js';
 
 interface NavbarProps {
   currentPath: string;
-  onOpenDockerGuide: () => void;
-  onOpenCreateFolder: () => void;
   onNavigatePath: (path: string) => void;
   onPlayTrack: (track: Track) => void;
   onRescan: () => Promise<void>;
@@ -25,8 +20,6 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentPath,
-  onOpenDockerGuide,
-  onOpenCreateFolder,
   onNavigatePath,
   onPlayTrack,
   onRescan,
@@ -194,41 +187,13 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Action Buttons */}
       <div className="flex items-center gap-2">
         <button
-          onClick={onOpenCreateFolder}
-          className="h-9 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
-          title="Create a new folder in current directory"
-        >
-          <FolderPlus className="w-4 h-4 text-emerald-400" />
-          <span className="hidden md:inline">New Folder</span>
-        </button>
-
-        <button
           onClick={onRescan}
           disabled={isRescanning}
-          className="h-9 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+          className="h-9 px-3.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
           title="Rescan music library and refresh metadata cache"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isRescanning ? 'animate-spin text-emerald-400' : 'text-zinc-400'}`} />
-          <span className="hidden lg:inline">{isRescanning ? 'Rescanning...' : 'Rescan Library'}</span>
-        </button>
-
-        <a
-          href="/api/download-project"
-          download="resonance-music-server.zip"
-          className="h-9 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
-          title="Скачать zip-архив проекта на компьютер"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Скачать проект (.zip)</span>
-        </a>
-
-        <button
-          onClick={onOpenDockerGuide}
-          className="h-9 px-3.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
-          title="Open Docker Compose & Architecture Deployment Guide"
-        >
-          <Server className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Инструкция</span>
+          <span className="hidden sm:inline">{isRescanning ? 'Rescanning...' : 'Rescan Library'}</span>
         </button>
       </div>
     </header>

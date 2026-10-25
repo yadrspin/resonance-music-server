@@ -339,8 +339,6 @@ export default function App() {
       {/* 1. Header / Navbar */}
       <Navbar
         currentPath={currentPath}
-        onOpenDockerGuide={() => setIsDockerGuideOpen(true)}
-        onOpenCreateFolder={() => setIsCreateFolderOpen(true)}
         onNavigatePath={handleNavigatePath}
         onPlayTrack={(track) => playTrack(track)}
         onRescan={handleRescan}

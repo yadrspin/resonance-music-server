@@ -6,3 +6,12 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Music data & cache
+music_data/
+resonance_data/
+*.zip
+
+# Playwright & test artifacts
+.playwright-cli/
+.aistudio/
