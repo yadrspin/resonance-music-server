@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Folder,
   ListMusic,
@@ -38,6 +38,23 @@ export const FolderTreeSidebar: React.FC<FolderTreeSidebarProps> = ({
   isMobileOpen = false,
   onCloseMobile
 }) => {
+  const [isTopFoldersCollapsed, setIsTopFoldersCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('resonance_top_folders_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleTopFolders = () => {
+    setIsTopFoldersCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('resonance_top_folders_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
   return (
     <>
       {/* Mobile backdrop */}
@@ -83,33 +100,50 @@ export const FolderTreeSidebar: React.FC<FolderTreeSidebarProps> = ({
         {/* Directory Quick Jumps */}
         {topFolders.length > 0 && (
           <div>
-            <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider px-2 mb-2 flex items-center justify-between">
-              <span>Top Folders</span>
-              <span className="text-[10px] text-zinc-400">{topFolders.length}</span>
-            </div>
-            <div className="space-y-1">
-              {topFolders.map((folder) => {
-                const isActive = selectedPlaylistId === null && currentPath.startsWith(folder);
-                return (
-                  <button
-                    key={folder}
-                    onClick={() => {
-                      onSelectPlaylist(null);
-                      onNavigatePath(folder);
-                    }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors text-left truncate ${
-                      isActive
-                        ? 'bg-zinc-800 text-emerald-400 font-medium'
-                        : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
-                    }`}
-                    title={folder}
-                  >
-                    <Folder className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-emerald-400' : 'text-zinc-500'}`} />
-                    <span className="truncate">{folder}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <button
+              onClick={toggleTopFolders}
+              className="w-full text-[11px] font-semibold text-zinc-400 hover:text-zinc-200 uppercase tracking-wider px-2 py-1 mb-1.5 flex items-center justify-between rounded hover:bg-zinc-900/60 transition-colors group cursor-pointer"
+              title={isTopFoldersCollapsed ? 'Развернуть Top Folders' : 'Свернуть Top Folders'}
+              aria-expanded={!isTopFoldersCollapsed}
+            >
+              <div className="flex items-center gap-1.5">
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300 transition-transform duration-200 ${
+                    isTopFoldersCollapsed ? '-rotate-90' : 'rotate-0'
+                  }`}
+                />
+                <span>Top Folders</span>
+              </div>
+              <span className="text-[10px] text-zinc-400 bg-zinc-900 border border-zinc-800/80 px-1.5 py-0.5 rounded-full font-mono">
+                {topFolders.length}
+              </span>
+            </button>
+
+            {!isTopFoldersCollapsed && (
+              <div className="space-y-1">
+                {topFolders.map((folder) => {
+                  const isActive = selectedPlaylistId === null && currentPath.startsWith(folder);
+                  return (
+                    <button
+                      key={folder}
+                      onClick={() => {
+                        onSelectPlaylist(null);
+                        onNavigatePath(folder);
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors text-left truncate ${
+                        isActive
+                          ? 'bg-zinc-800 text-emerald-400 font-medium'
+                          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                      }`}
+                      title={folder}
+                    >
+                      <Folder className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                      <span className="truncate">{folder}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
