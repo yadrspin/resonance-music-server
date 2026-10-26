@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Folder,
   Music2,
@@ -44,6 +44,14 @@ export const FolderBrowser: React.FC<FolderBrowserProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [activeMenuTrackId, setActiveMenuTrackId] = useState<string | null>(null);
+
+  const currentTrackRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (currentTrackRef.current) {
+      currentTrackRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentTrackId]);
 
   const folderName = listing.currentPath ? listing.currentPath.split('/').pop() || 'Music' : 'Music Root';
 
@@ -228,8 +236,9 @@ export const FolderBrowser: React.FC<FolderBrowserProps> = ({
               return (
                 <div
                   key={track.id}
+                  ref={isCurrent ? currentTrackRef : undefined}
                   className={`grid grid-cols-12 gap-3 px-4 py-3 items-center hover:bg-zinc-800/50 transition-colors group ${
-                    isCurrent ? 'bg-emerald-500/10 text-emerald-300' : 'text-zinc-300'
+                    isCurrent ? 'bg-emerald-500/15 text-emerald-300 border-l-2 border-emerald-400 font-medium shadow-sm' : 'text-zinc-300'
                   }`}
                 >
                   {/* Track Number / Play button */}

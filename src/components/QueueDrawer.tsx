@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   X,
   Trash2,
@@ -37,6 +37,14 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
   onClearQueue,
   onSaveAsPlaylist
 }) => {
+  const activeQueueItemRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen && activeQueueItemRef.current) {
+      activeQueueItemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isOpen, currentIndex]);
+
   if (!isOpen) return null;
 
   return (
@@ -98,9 +106,10 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({
             return (
               <div
                 key={`${track.id}-${idx}`}
+                ref={isCurrent ? activeQueueItemRef : undefined}
                 className={`p-2.5 rounded-lg border transition-all flex items-center justify-between gap-2.5 group ${
                   isCurrent
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-white'
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-white font-medium shadow-sm'
                     : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/80 text-zinc-300'
                 }`}
               >

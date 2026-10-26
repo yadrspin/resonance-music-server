@@ -14,12 +14,27 @@ import { useAudioPlayer } from './hooks/useAudioPlayer.js';
 import { DirectoryListing, Playlist, SystemStats, Track } from './types/music.js';
 import { RefreshCw } from 'lucide-react';
 
+const STORAGE_PATH_KEY = 'resonance_current_path_v1';
+const STORAGE_SELECTED_PLAYLIST_KEY = 'resonance_selected_playlist_v1';
+
 export default function App() {
-  const [currentPath, setCurrentPath] = useState<string>('');
+  const [currentPath, setCurrentPath] = useState<string>(() => {
+    try {
+      return localStorage.getItem(STORAGE_PATH_KEY) || '';
+    } catch {
+      return '';
+    }
+  });
   const [directoryListing, setDirectoryListing] = useState<DirectoryListing | null>(null);
   const [isLoadingDir, setIsLoadingDir] = useState<boolean>(true);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(STORAGE_SELECTED_PLAYLIST_KEY) || null;
+    } catch {
+      return null;
+    }
+  });
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [rootFolders, setRootFolders] = useState<string[]>([]);
   const [isRescanning, setIsRescanning] = useState<boolean>(false);
@@ -139,6 +154,22 @@ export default function App() {
   useEffect(() => {
     fetchDirectory(currentPath);
   }, [currentPath, fetchDirectory]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_PATH_KEY, currentPath);
+    } catch {}
+  }, [currentPath]);
+
+  useEffect(() => {
+    try {
+      if (selectedPlaylistId) {
+        localStorage.setItem(STORAGE_SELECTED_PLAYLIST_KEY, selectedPlaylistId);
+      } else {
+        localStorage.removeItem(STORAGE_SELECTED_PLAYLIST_KEY);
+      }
+    } catch {}
+  }, [selectedPlaylistId]);
 
   // Navigate to folder path
   const handleNavigatePath = (path: string) => {

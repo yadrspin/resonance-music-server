@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   ListMusic,
   Play,
@@ -45,6 +45,13 @@ export const PlaylistView: React.FC<PlaylistViewProps> = ({
   onExportM3U8,
   onOpenFolderBrowser
 }) => {
+  const currentTrackRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (currentTrackRef.current) {
+      currentTrackRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentTrackId]);
   const totalDuration = playlist.tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
   const totalSize = playlist.tracks.reduce((acc, t) => acc + (t.size || 0), 0);
 
@@ -185,8 +192,9 @@ export const PlaylistView: React.FC<PlaylistViewProps> = ({
               return (
                 <div
                   key={`${track.id}-${idx}`}
+                  ref={isCurrent ? currentTrackRef : undefined}
                   className={`grid grid-cols-12 gap-3 px-4 py-3 items-center hover:bg-zinc-800/50 transition-colors group ${
-                    isCurrent ? 'bg-emerald-500/10 text-emerald-300' : 'text-zinc-300'
+                    isCurrent ? 'bg-emerald-500/15 text-emerald-300 border-l-2 border-emerald-400 font-medium shadow-sm' : 'text-zinc-300'
                   }`}
                 >
                   {/* Track number / play button */}

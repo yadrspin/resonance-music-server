@@ -197,41 +197,55 @@ export function useAudioPlayer() {
     }
   });
 
+  const queueRef = useRef(queue);
+  queueRef.current = queue;
+  const currentIndexRef = useRef(currentIndex);
+  currentIndexRef.current = currentIndex;
+  const isShuffleRef = useRef(isShuffle);
+  isShuffleRef.current = isShuffle;
+  const repeatModeRef = useRef(repeatMode);
+  repeatModeRef.current = repeatMode;
+
   // Track ended logic
-  const handleTrackEnd = () => {
-    if (repeatMode === 'one') {
+  const handleTrackEnd = useCallback(() => {
+    if (repeatModeRef.current === 'one') {
       const audio = audioRef.current;
       if (audio) {
         audio.currentTime = 0;
-        audio.play();
+        audio.play().catch(console.warn);
       }
       return;
     }
 
     playNext();
-  };
+  }, []);
 
   const playNext = useCallback(() => {
-    if (queue.length === 0) return;
+    const q = queueRef.current;
+    const curIdx = currentIndexRef.current;
+    const shuffle = isShuffleRef.current;
+    const repeat = repeatModeRef.current;
 
-    if (isShuffle) {
-      const randomIndex = Math.floor(Math.random() * queue.length);
+    if (q.length === 0) return;
+
+    if (shuffle) {
+      const randomIndex = Math.floor(Math.random() * q.length);
       setCurrentIndex(randomIndex);
-      loadAndPlay(queue[randomIndex]);
+      loadAndPlay(q[randomIndex]);
       return;
     }
 
-    if (currentIndex + 1 < queue.length) {
-      const nextIdx = currentIndex + 1;
+    if (curIdx + 1 < q.length) {
+      const nextIdx = curIdx + 1;
       setCurrentIndex(nextIdx);
-      loadAndPlay(queue[nextIdx]);
-    } else if (repeatMode === 'all') {
+      loadAndPlay(q[nextIdx]);
+    } else if (repeat === 'all') {
       setCurrentIndex(0);
-      loadAndPlay(queue[0]);
+      loadAndPlay(q[0]);
     } else {
       setIsPlaying(false);
     }
-  }, [queue, currentIndex, isShuffle, repeatMode, loadAndPlay]);
+  }, [loadAndPlay]);
 
   const playPrevious = useCallback(() => {
     const audio = audioRef.current;
@@ -241,18 +255,22 @@ export function useAudioPlayer() {
       return;
     }
 
-    if (queue.length === 0) return;
+    const q = queueRef.current;
+    const curIdx = currentIndexRef.current;
+    const repeat = repeatModeRef.current;
 
-    if (currentIndex - 1 >= 0) {
-      const prevIdx = currentIndex - 1;
+    if (q.length === 0) return;
+
+    if (curIdx - 1 >= 0) {
+      const prevIdx = curIdx - 1;
       setCurrentIndex(prevIdx);
-      loadAndPlay(queue[prevIdx]);
-    } else if (repeatMode === 'all') {
-      const lastIdx = queue.length - 1;
+      loadAndPlay(q[prevIdx]);
+    } else if (repeat === 'all') {
+      const lastIdx = q.length - 1;
       setCurrentIndex(lastIdx);
-      loadAndPlay(queue[lastIdx]);
+      loadAndPlay(q[lastIdx]);
     }
-  }, [queue, currentIndex, repeatMode, loadAndPlay]);
+  }, [loadAndPlay]);
 
   const playTrack = useCallback((track: Track, newQueue?: Track[], startIndex?: number) => {
     if (newQueue) {
